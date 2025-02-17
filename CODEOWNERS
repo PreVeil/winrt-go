@@ -1,0 +1,5 @@
+# Dependencies limited to team lead
+go.* @npiedra
+
+# Code owners
+* @ianyh @hu13 @SearidangPa @npiedra @feilongm
