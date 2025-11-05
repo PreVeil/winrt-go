@@ -141,7 +141,7 @@ func first(inst unsafe.Pointer, out **collections.IIterator) uintptr {
 	offset := unsafe.Offsetof(arrayIterable{}.IIterable)
 	i := (*arrayIterable)(unsafe.Pointer(uintptr(inst) - offset))
 
-	arrIt, ok := arrayItems.get(inst)
+	arrIt, ok := arrayItems.get(unsafe.Pointer(i))
 	if !ok {
 		return ole.E_FAIL
 	}
