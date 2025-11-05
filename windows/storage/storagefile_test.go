@@ -77,7 +77,7 @@ func Test_GetStorageFileFromPath(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "someDir")
 	require.NoError(t, err)
 	fpath := filepath.Join(tempDir, "someFile.txt")
-	f, err := os.Create(fpath)
+	f, err := os.Create(fpath) // #nosec G304 - test file creation with controlled path
 	require.NoError(t, err)
 	require.NotNil(t, f)
 	sfile, err := GetFileFromPath(fpath)

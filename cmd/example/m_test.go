@@ -26,12 +26,12 @@ func Test_adsf(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println("Number of roots:", numRoots)
 
-	// tempBase, err := os.UserCacheDir()
-	// require.NoError(t, err)
-	// syncRootPath, err := os.MkdirTemp(tempBase, "syncRootPath")
-	// require.NoError(t, err)
-	syncRootPath := "C:\\Users\\hangk\\AppData\\Local\\syncRootPath1179387943"
-	println(syncRootPath)
+	tempBase, err := os.UserCacheDir()
+	require.NoError(t, err)
+	syncRootPath, err := os.MkdirTemp(tempBase, "syncRootPath")
+	require.NoError(t, err)
+	fmt.Println("Created sync root path:", syncRootPath)
+	defer os.RemoveAll(syncRootPath)
 
 	writer, err := streams.NewDataWriter()
 	require.NoError(t, err)

@@ -66,7 +66,7 @@ type arrayIterable struct {
 // NewArrayIterable creates a new IIterable from a Go slice for passing to WinRT APIs.
 func NewArrayIterable(items []any, itemSignature string) *collections.IIterable {
 	// create type instance
-	size := unsafe.Sizeof(*(*arrayIterable)(nil))
+	size := unsafe.Sizeof(*(*arrayIterable)(nil)) // #nosec G103 - required for WinRT interop
 	instPtr := kernel32.Malloc(size)
 	inst := (*arrayIterable)(instPtr)
 
@@ -74,7 +74,7 @@ func NewArrayIterable(items []any, itemSignature string) *collections.IIterable 
 	callbacks := iunknown.RegisterInstance(instPtr, inst)
 
 	// the VTable should also be allocated in the heap
-	sizeVTable := unsafe.Sizeof(*(*collections.IIterableVtbl)(nil))
+	sizeVTable := unsafe.Sizeof(*(*collections.IIterableVtbl)(nil)) // #nosec G103 - required for WinRT interop
 	vTablePtr := kernel32.Malloc(sizeVTable)
 
 	inst.RawVTable = (*interface{})(vTablePtr)
@@ -128,7 +128,7 @@ func (r *arrayIterable) Release() uintptr {
 	rem := r.removeRef()
 	if rem == 0 {
 		// We're done.
-		instancePtr := unsafe.Pointer(r)
+		instancePtr := unsafe.Pointer(r) // #nosec G103 - required for WinRT interop
 		arrayItems.remove(instancePtr)
 		kernel32.Free(unsafe.Pointer(r.RawVTable))
 		kernel32.Free(instancePtr)
@@ -236,7 +236,7 @@ func (r *collectionsIterator) Release() uintptr {
 	rem := r.removeRef()
 	if rem == 0 {
 		// We're done.
-		instancePtr := unsafe.Pointer(r)
+		instancePtr := unsafe.Pointer(r) // #nosec G103 - required for WinRT interop
 		arrayItems.remove(instancePtr)
 		kernel32.Free(unsafe.Pointer(r.RawVTable))
 		kernel32.Free(instancePtr)

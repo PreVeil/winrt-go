@@ -19,7 +19,7 @@ var (
 	releaseCallback        = syscall.NewCallback(release)
 )
 
-// Class instance represents a WinRT delegate class.
+// Instance represents a WinRT delegate class.
 type Instance interface {
 	GetIID() *ole.GUID
 	AddRef() uintptr
