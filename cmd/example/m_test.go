@@ -3,14 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/user"
-	"syscall"
 	"testing"
 	"time"
 	"unsafe"
 
 	"github.com/go-ole/go-ole"
-	"github.com/google/uuid"
 	"github.com/saltosystems/winrt-go/windows/storage"
 	"github.com/saltosystems/winrt-go/windows/storage/provider"
 	"github.com/saltosystems/winrt-go/windows/storage/streams"
@@ -51,19 +48,8 @@ func Test_adsf(t *testing.T) {
 
 	err = syncRootInfo.SetContext(bufferContext)
 	require.NoError(t, err)
-	uuid, err := uuid.NewRandom()
-	require.NoError(t, err)
 
-	u, err := user.Current()
-	require.NoError(t, err)
-
-	userSid, err := syscall.StringToSid(u.Uid)
-	require.NoError(t, err)
-
-	sidString, err := userSid.String()
-	require.NoError(t, err)
-
-	err = syncRootInfo.SetId(fmt.Sprintf("%s!%s!%v", uuid.String(), sidString, time.Now().Unix()))
+	err = syncRootInfo.SetId("{00000000-1234-0000-0000-000000000001}")
 	require.NoError(t, err)
 
 	idd, err := syncRootInfo.GetId()
@@ -92,15 +78,21 @@ func Test_adsf(t *testing.T) {
 	require.NoError(t, err)
 	err = syncRootInfo.SetHardlinkPolicy(0)
 	require.NoError(t, err)
-	err = syncRootInfo.SetVersion("1.0.0.0")
+	err = syncRootInfo.SetVersion("1.0")
 	require.NoError(t, err)
 
 	v, err := syncRootInfo.GetVersion()
 	fmt.Println(">>>>>>> version", v, err)
-	// syncRootInfo.SetAllowPinning(true)
-	// syncRootInfo.SetShowSiblingsAsGroup(false)
-	// syncRootInfo.SetProtectionMode(0)
-	// syncRootInfo.SetDisplayNameResource("DisplayNameResource-123")
+	err = syncRootInfo.SetAllowPinning(true)
+	require.NoError(t, err)
+	err = syncRootInfo.SetShowSiblingsAsGroup(false)
+	require.NoError(t, err)
+	err = syncRootInfo.SetProtectionMode(0)
+	require.NoError(t, err)
+	err = syncRootInfo.SetDisplayNameResource("DisplayNameResource-123")
+	require.NoError(t, err)
+	err = syncRootInfo.SetIconResource("C:\\WINDOWS\\system32\\imageres.dll,-1043")
+	require.NoError(t, err)
 	//PrintAllFields(syncRootInfo)
 	fmt.Println(">>>>>>> sync root info", syncRootInfo)
 
