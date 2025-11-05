@@ -440,7 +440,7 @@ func (g *generator) createGenEnum(typeDef *winmd.TypeDef) (*genEnum, error) {
 				)
 		}
 
-		var fieldIndex uint32 = typeDef.FieldList.Start() + 1 + uint32(i)
+		var fieldIndex uint32 = typeDef.FieldList.Start() + 1 + uint32(i) // #nosec G115 - field indices from metadata are always positive
 		enumRawValue, err := typeDef.GetValueForEnumField(fieldIndex)
 		if err != nil {
 			return nil, err
@@ -701,7 +701,7 @@ func (g *generator) getInParameters(curPackage string, typeDef *winmd.TypeDef, m
 
 	var genParams []*genParam
 	for i, e := range mr.Params {
-		param := getParamByIndex(params, uint16(i+1))
+		param := getParamByIndex(params, uint16(i+1)) // #nosec G115 - parameter count is small and bounded
 		if param == nil {
 			_ = level.Error(g.logger).Log("msg", "Parameter with index not found", "index", i+1)
 			continue // do not fail
@@ -744,7 +744,7 @@ func (g *generator) getInParameters(curPackage string, typeDef *winmd.TypeDef, m
 		}
 		genParams = append(genParams, &genParam{
 			callerPackage: curPackage,
-			varName:       cleanReservedWords(getParamName(params, uint16(i+1))),
+			varName:       cleanReservedWords(getParamName(params, uint16(i+1))), // #nosec G115 - parameter count is small and bounded
 			IsOut:         param.Flags.Out(),
 			Type:          elType,
 		})

@@ -1,6 +1,7 @@
 package winrt
 
 import (
+	"math"
 	"reflect"
 	"sync"
 	"syscall"
@@ -66,7 +67,7 @@ type arrayIterable struct {
 // NewArrayIterable creates a new IIterable from a Go slice for passing to WinRT APIs.
 func NewArrayIterable(items []any, itemSignature string) *collections.IIterable {
 	// create type instance
-	size := unsafe.Sizeof(*(*arrayIterable)(nil)) // #nosec G103 - required for WinRT interop
+	size := unsafe.Sizeof(*(*arrayIterable)(nil))
 	instPtr := kernel32.Malloc(size)
 	inst := (*arrayIterable)(instPtr)
 
@@ -74,7 +75,7 @@ func NewArrayIterable(items []any, itemSignature string) *collections.IIterable 
 	callbacks := iunknown.RegisterInstance(instPtr, inst)
 
 	// the VTable should also be allocated in the heap
-	sizeVTable := unsafe.Sizeof(*(*collections.IIterableVtbl)(nil)) // #nosec G103 - required for WinRT interop
+	sizeVTable := unsafe.Sizeof(*(*collections.IIterableVtbl)(nil))
 	vTablePtr := kernel32.Malloc(sizeVTable)
 
 	inst.RawVTable = (*interface{})(vTablePtr)
@@ -128,17 +129,17 @@ func (r *arrayIterable) Release() uintptr {
 	rem := r.removeRef()
 	if rem == 0 {
 		// We're done.
-		instancePtr := unsafe.Pointer(r) // #nosec G103 - required for WinRT interop
+		instancePtr := unsafe.Pointer(r)
 		arrayItems.remove(instancePtr)
-		kernel32.Free(unsafe.Pointer(r.RawVTable)) // #nosec G103 - required for WinRT interop
+		kernel32.Free(unsafe.Pointer(r.RawVTable))
 		kernel32.Free(instancePtr)
 	}
 	return rem
 }
 
 func first(inst unsafe.Pointer, out **collections.IIterator) uintptr {
-	offset := unsafe.Offsetof(arrayIterable{}.IIterable)                  // #nosec G103 - required for WinRT interop
-	i := (*arrayIterable)(unsafe.Pointer(uintptr(inst) - offset)) // #nosec G103 - required for WinRT interop
+	offset := unsafe.Offsetof(arrayIterable{}.IIterable)
+	i := (*arrayIterable)(unsafe.Pointer(uintptr(inst) - offset))
 
 	arrIt, ok := arrayItems.get(inst)
 	if !ok {
@@ -236,9 +237,9 @@ func (r *collectionsIterator) Release() uintptr {
 	rem := r.removeRef()
 	if rem == 0 {
 		// We're done.
-		instancePtr := unsafe.Pointer(r) // #nosec G103 - required for WinRT interop
+		instancePtr := unsafe.Pointer(r)
 		arrayItems.remove(instancePtr)
-		kernel32.Free(unsafe.Pointer(r.RawVTable)) // #nosec G103 - required for WinRT interop
+		kernel32.Free(unsafe.Pointer(r.RawVTable))
 		kernel32.Free(instancePtr)
 	}
 	return rem
@@ -316,6 +317,9 @@ func getMany(inst, itemsAmount, outItems, outItemsSize unsafe.Pointer) uintptr {
 	}
 
 	// output size
+	if returnItems < 0 || returnItems > math.MaxUint32 {
+		return ole.E_FAIL
+	}
 	*(*uint32)(outItemsSize) = uint32(returnItems) /*the amount of items*/
 
 	return ole.S_OK

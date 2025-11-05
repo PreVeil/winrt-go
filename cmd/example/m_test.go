@@ -32,7 +32,10 @@ func Test_adsf(t *testing.T) {
 	syncRootPath, err := os.MkdirTemp(tempBase, "syncRootPath")
 	require.NoError(t, err)
 	fmt.Println("Created sync root path:", syncRootPath)
-	defer os.RemoveAll(syncRootPath)
+	defer func() {
+		// Cleanup in defer, error not critical
+		_ = os.RemoveAll(syncRootPath) //nolint:errcheck
+	}()
 
 	writer, err := streams.NewDataWriter()
 	require.NoError(t, err)

@@ -56,9 +56,12 @@ mod-download:
 	@go mod download
 
 .PHONY: golangci-lint
+golangci-lint: export GOOS=windows
+golangci-lint: export GOARCH=amd64
+golangci-lint: export GO111MODULE=on
 golangci-lint:
 	@echo "Running golangci-lint..."
-	@golangci-lint run $(PKG) --timeout 30m -v --config=$(SANITY_CHECKING_CONFIG)
+	@golangci-lint run $(PKG) --timeout 30m -v --config=$(SANITY_CHECKING_CONFIG) --modules-download-mode=readonly
 
 
 # Another modules verification apart from mod-verify step should be to ensure that go mod tidy has been run on dev box when this gets fixed:

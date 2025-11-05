@@ -250,12 +250,12 @@ func funcName(m genFunc) string {
 	return prefix + name
 }
 
-func typeToFolder(ns, name string) string {
+func typeToFolder(ns, _ string) string {
 	fullName := ns
 	return strings.ToLower(strings.Replace(fullName, ".", "/", -1))
 }
 
-func typePackage(ns, name string) string {
+func typePackage(ns, _ string) string {
 	sns := strings.Split(ns, ".")
 	return strings.ToLower(sns[len(sns)-1])
 }

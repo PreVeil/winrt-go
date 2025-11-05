@@ -134,7 +134,7 @@ func run2() error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(">>>>>>> buffer content", bufferContent, string(bufferContent))
+	fmt.Println(">>>>>>> buffer content", string(bufferContent))
 
 	syncRootInfo, err := provider.NewStorageProviderSyncRootInfo()
 	if err != nil {

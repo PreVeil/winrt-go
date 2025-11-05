@@ -169,7 +169,7 @@ func Test_GetCurrentSyncRoots(t *testing.T) {
 	writer, err := streams.NewDataWriter()
 	require.NoError(t, err)
 	syncRootID := []byte("syncRootIdentity")
-	err = writer.WriteBytes(uint32(len(syncRootID)), syncRootID)
+	err = writer.WriteBytes(uint32(len(syncRootID)), syncRootID) // #nosec G115 - syncRootID length is always reasonable
 	require.NoError(t, err)
 
 	bufferContext, err := writer.DetachBuffer()
