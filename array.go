@@ -63,6 +63,7 @@ type arrayIterable struct {
 	itemSignature string
 }
 
+// NewArrayIterable creates a new IIterable from a Go slice for passing to WinRT APIs.
 func NewArrayIterable(items []any, itemSignature string) *collections.IIterable {
 	// create type instance
 	size := unsafe.Sizeof(*(*arrayIterable)(nil))
@@ -166,6 +167,7 @@ type collectionsIterator struct {
 	itemSignature string
 }
 
+// NewArrayIterator creates a new IIterator from a Go slice for passing to WinRT APIs.
 func NewArrayIterator(items []any, itemSignature string) *collections.IIterator {
 	// create type instance
 	size := unsafe.Sizeof(*(*collectionsIterator)(nil))
@@ -320,7 +322,7 @@ func getMany(inst, itemsAmount, outItems, outItemsSize unsafe.Pointer) uintptr {
 }
 
 func copyItemToPointer(item any, out unsafe.Pointer) uintptr {
-	var size uintptr = 0
+	var size uintptr
 	switch t := item.(type) {
 	case uint:
 		*(*uint)(out) = t

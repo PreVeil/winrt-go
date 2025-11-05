@@ -12,7 +12,7 @@ func Test_GetCurrent(t *testing.T) {
 	it, err := a.First()
 	require.NoError(t, err)
 
-	var ok bool = false
+	ok := false
 	i := 1
 	for ok, err = it.MoveNext(); err == nil && ok; ok, err = it.MoveNext() {
 		b, err := it.GetHasCurrent()
@@ -37,7 +37,7 @@ func Test_GetMany(t *testing.T) {
 	println("RESP", n, resp, len(resp))
 
 	var i uint32
-	var j int = 101
+	j := 101
 	for i = 0; i < n; i++ {
 		val := int(uintptr(resp[i]))
 		require.Equal(t, j, val)

@@ -29,7 +29,7 @@ type Instance interface {
 var mutex = sync.RWMutex{}
 var instances = make(map[uintptr]Instance)
 
-// RegisterCallbacks adds the given pointer and the Delegate it points to to our instances.
+// RegisterInstance adds the given pointer and the Delegate it points to to our instances.
 // This is required to redirect received callbacks to the correct object instance.
 // The function returns the callbacks to use when creating a new delegate instance.
 func RegisterInstance(ptr unsafe.Pointer, inst Instance) *ole.IUnknownVtbl {
@@ -44,6 +44,7 @@ func RegisterInstance(ptr unsafe.Pointer, inst Instance) *ole.IUnknownVtbl {
 	}
 }
 
+// GetInstance retrieves an Instance from our registry by its pointer address.
 func GetInstance(ptr unsafe.Pointer) (Instance, bool) {
 	mutex.RLock() // locks writing, allows concurrent read
 	defer mutex.RUnlock()

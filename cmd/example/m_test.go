@@ -17,7 +17,8 @@ import (
 )
 
 func Test_adsf(t *testing.T) {
-	ole.RoInitialize(0)
+	err := ole.RoInitialize(0)
+	require.NoError(t, err)
 
 	roots, err := provider.StorageProviderSyncRootManagerGetCurrentSyncRoots()
 	require.NoError(t, err)
@@ -34,8 +35,8 @@ func Test_adsf(t *testing.T) {
 
 	writer, err := streams.NewDataWriter()
 	require.NoError(t, err)
-	syncRootId := []byte("syncRootIdentity")
-	err = writer.WriteBytes(uint32(len(syncRootId)), syncRootId)
+	syncRootID := []byte("syncRootIdentity")
+	err = writer.WriteBytes(uint32(len(syncRootID)), syncRootID)
 	require.NoError(t, err)
 
 	bufferContext, err := writer.DetachBuffer()
