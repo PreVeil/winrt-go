@@ -176,7 +176,7 @@ func NewArrayIterator(items []any, itemSignature string) *collections.IIterator 
 	callbacks := iunknown.RegisterInstance(instPtr, inst)
 
 	// the VTable should also be allocated in the heap
-	sizeVTable := unsafe.Sizeof(*(*collections.IIterableVtbl)(nil))
+	sizeVTable := unsafe.Sizeof(*(*collections.IIteratorVtbl)(nil))
 	vTablePtr := kernel32.Malloc(sizeVTable)
 
 	inst.RawVTable = (*interface{})(vTablePtr)
