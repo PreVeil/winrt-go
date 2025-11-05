@@ -130,15 +130,15 @@ func (r *arrayIterable) Release() uintptr {
 		// We're done.
 		instancePtr := unsafe.Pointer(r) // #nosec G103 - required for WinRT interop
 		arrayItems.remove(instancePtr)
-		kernel32.Free(unsafe.Pointer(r.RawVTable))
+		kernel32.Free(unsafe.Pointer(r.RawVTable)) // #nosec G103 - required for WinRT interop
 		kernel32.Free(instancePtr)
 	}
 	return rem
 }
 
 func first(inst unsafe.Pointer, out **collections.IIterator) uintptr {
-	offset := unsafe.Offsetof(arrayIterable{}.IIterable)
-	i := (*arrayIterable)(unsafe.Pointer(uintptr(inst) - offset))
+	offset := unsafe.Offsetof(arrayIterable{}.IIterable)                  // #nosec G103 - required for WinRT interop
+	i := (*arrayIterable)(unsafe.Pointer(uintptr(inst) - offset)) // #nosec G103 - required for WinRT interop
 
 	arrIt, ok := arrayItems.get(inst)
 	if !ok {
@@ -238,7 +238,7 @@ func (r *collectionsIterator) Release() uintptr {
 		// We're done.
 		instancePtr := unsafe.Pointer(r) // #nosec G103 - required for WinRT interop
 		arrayItems.remove(instancePtr)
-		kernel32.Free(unsafe.Pointer(r.RawVTable))
+		kernel32.Free(unsafe.Pointer(r.RawVTable)) // #nosec G103 - required for WinRT interop
 		kernel32.Free(instancePtr)
 	}
 	return rem
