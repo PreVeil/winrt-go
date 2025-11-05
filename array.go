@@ -303,6 +303,9 @@ func getMany(inst, itemsAmount, outItems, outItemsSize unsafe.Pointer) uintptr {
 	// requested itemsAmount
 	requestedItems := int(uintptr(itemsAmount))
 	availableItems := len(items) - it.index - 1
+	if availableItems < 0 {
+		availableItems = 0
+	}
 	returnItems := requestedItems
 	if returnItems > availableItems {
 		// not enough items available
