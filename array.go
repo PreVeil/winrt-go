@@ -203,7 +203,7 @@ func NewArrayIterator(items []any, itemSignature string) *collections.IIterator 
 	inst.Mutex = sync.Mutex{}
 	inst.refs = 0
 	inst.itemSignature = itemSignature
-	inst.index = -1 // not initialized
+	inst.index = 0 // ensure index is in the open interval [0,len(items))
 
 	inst.AddRef()
 	return &inst.IIterator // ugly but works
