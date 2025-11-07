@@ -14,7 +14,7 @@ func Test_GetCurrent(t *testing.T) {
 
 	ok := false
 	i := 1
-	for ok, err = it.MoveNext(); err == nil && ok; ok, err = it.MoveNext() {
+	for ; err == nil && ok; ok, err = it.MoveNext() {
 		b, err := it.GetHasCurrent()
 		require.NoError(t, err)
 		require.True(t, b)
@@ -105,7 +105,7 @@ func Test_SequentialEmptyAndNonEmpty(t *testing.T) {
 
 	current, err := nonEmptyIterator.GetCurrent()
 	require.NoError(t, err)
-	require.Equal(t, 42, int(uintptr(current)))
+	require.Equal(t, 43, int(uintptr(current)))
 
 	// Clean up.
 	nonEmptyIterator.Release()
@@ -176,19 +176,28 @@ func Test_MultipleIteratorsFromSameIterable(t *testing.T) {
 	iter2, err := iterable.First()
 	require.NoError(t, err)
 
+	current, err := iter1.GetCurrent()
+	require.NoError(t, err)
+	require.Equal(t, 10, int(uintptr(current)))
+
 	// Advance first iterator.
 	moved, err := iter1.MoveNext()
 	require.NoError(t, err)
 	require.True(t, moved)
 
-	current, err := iter1.GetCurrent()
+	// Get the new current value after moving.
+	current, err = iter1.GetCurrent()
 	require.NoError(t, err)
-	require.Equal(t, 10, int(uintptr(current)))
+	require.Equal(t, 20, int(uintptr(current)))
 
 	// Second iterator should still be at start.
 	hasCurrent, err := iter2.GetHasCurrent()
 	require.NoError(t, err)
-	require.False(t, hasCurrent) // hasn't moved yet.
+	require.True(t, hasCurrent) // hasn't moved yet, but still on first element.
+
+	current, err = iter2.GetCurrent()
+	require.NoError(t, err)
+	require.Equal(t, 10, int(uintptr(current)))
 
 	// Advance second iterator.
 	moved, err = iter2.MoveNext()
@@ -197,7 +206,7 @@ func Test_MultipleIteratorsFromSameIterable(t *testing.T) {
 
 	current, err = iter2.GetCurrent()
 	require.NoError(t, err)
-	require.Equal(t, 10, int(uintptr(current)))
+	require.Equal(t, 20, int(uintptr(current)))
 
 	// Clean up.
 	iter1.Release()

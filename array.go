@@ -302,7 +302,7 @@ func getMany(inst, itemsAmount, outItems, outItemsSize unsafe.Pointer) uintptr {
 
 	// requested itemsAmount
 	requestedItems := int(uintptr(itemsAmount))
-	availableItems := len(items) - it.index - 1
+	availableItems := len(items) - it.index
 	if availableItems < 0 {
 		availableItems = 0
 	}
@@ -315,8 +315,8 @@ func getMany(inst, itemsAmount, outItems, outItemsSize unsafe.Pointer) uintptr {
 	// copy items
 	n := uintptr(0)
 	for i := 0; i < returnItems; i++ {
-		it.index++
 		n += copyItemToPointer(items[it.index], unsafe.Pointer(uintptr(outItems)+n))
+		it.index++
 	}
 
 	// output size
