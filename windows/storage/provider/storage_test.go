@@ -214,8 +214,6 @@ func Test_GetCurrentSyncRoots(t *testing.T) {
 	require.NoError(t, err)
 	err = syncRootInfo.SetIconResource("C:\\WINDOWS\\system32\\imageres.dll,-1043")
 	require.NoError(t, err)
-	PrintAllFields(syncRootInfo)
-	fmt.Println(">>>>>>> sync root info", syncRootInfo)
 
 	err = StorageProviderSyncRootManagerRegister(syncRootInfo)
 	require.NoError(t, err)
