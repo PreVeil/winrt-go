@@ -7,6 +7,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"syscall"
+	"time"
 	"unsafe"
 
 	"github.com/go-ole/go-ole"
@@ -19,16 +20,20 @@ import (
 )
 
 func main() {
-	ole.RoInitialize(0)
+	if err := ole.RoInitialize(0); err != nil {
+		panic(err)
+	}
 	if err := run2(); err != nil {
 		panic(err)
 	}
 }
 
+// GetFolderFromPath retrieves a StorageFolder from the given file path.
 func GetFolderFromPath(fp string) (*storage.StorageFolder, error) {
 	var folder *storage.StorageFolder
 	var err error
 	waitChan := make(chan struct{})
+	timeout := time.NewTimer(30 * time.Second)
 	onCompleteCB := func(instance *foundation.AsyncOperationCompletedHandler, asyncInfo *foundation.IAsyncOperation, asyncStatus foundation.AsyncStatus) {
 		defer close(waitChan)
 		if asyncStatus != foundation.AsyncStatusCompleted {
@@ -66,9 +71,13 @@ func GetFolderFromPath(fp string) (*storage.StorageFolder, error) {
 		return nil, err
 	}
 
-	// Wait until async operation has stopped, and finish.
-	<-waitChan
-	return folder, err
+	// Wait until async operation has stopped, or timeout
+	select {
+	case <-waitChan:
+		return folder, err
+	case <-timeout.C:
+		return nil, fmt.Errorf("timeout waiting for async operation to complete after 30 seconds")
+	}
 }
 
 /*
@@ -106,8 +115,8 @@ func run2() error {
 	if err != nil {
 		return err
 	}
-	syncRootId := []byte("syncRootIdentity")
-	err = writer.WriteBytes(uint32(len(syncRootId)), syncRootId)
+	syncRootID := []byte("syncRootIdentity")
+	err = writer.WriteBytes(uint32(len(syncRootID)), syncRootID)
 	if err != nil {
 		return err
 	}
@@ -121,11 +130,11 @@ func run2() error {
 	if err != nil {
 		return err
 	}
-	bufferContent, err := reader.ReadBytes(uint32(len(syncRootId)))
+	bufferContent, err := reader.ReadBytes(uint32(len(syncRootID)))
 	if err != nil {
 		return err
 	}
-	fmt.Println(">>>>>>> buffer content", bufferContent, string(bufferContent))
+	fmt.Println(">>>>>>> buffer content", string(bufferContent))
 
 	syncRootInfo, err := provider.NewStorageProviderSyncRootInfo()
 	if err != nil {
@@ -226,10 +235,18 @@ func run2() error {
 
 	v, err := syncRootInfo.GetVersion()
 	fmt.Println(">>>>>>> version", v, err)
-	syncRootInfo.SetAllowPinning(true)
-	syncRootInfo.SetShowSiblingsAsGroup(false)
-	syncRootInfo.SetProtectionMode(1)
-	syncRootInfo.SetDisplayNameResource(filepath.Base(syncRootPath))
+	if err := syncRootInfo.SetAllowPinning(true); err != nil {
+		return err
+	}
+	if err := syncRootInfo.SetShowSiblingsAsGroup(false); err != nil {
+		return err
+	}
+	if err := syncRootInfo.SetProtectionMode(1); err != nil {
+		return err
+	}
+	if err := syncRootInfo.SetDisplayNameResource(filepath.Base(syncRootPath)); err != nil {
+		return err
+	}
 	// PrintAllFields(syncRootInfo)
 	fmt.Println(">>>>>>> sync root info", syncRootInfo)
 

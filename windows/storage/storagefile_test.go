@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 	"unsafe"
 
 	"github.com/go-ole/go-ole"
@@ -15,14 +16,9 @@ import (
 )
 
 func init() {
-	err := ole.RoInitialize(1)
-	if err != nil {
+	if err := ole.RoInitialize(1); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func cleanupCOM() {
-	ole.CoUninitialize()
 }
 
 // GetFileFromPath retrieves a StorageFile from a given file path using StorageFile.GetFileFromPathAsync api
@@ -32,6 +28,7 @@ func GetFileFromPath(fp string) (*StorageFile, error) {
 	var storageFile *StorageFile
 	var err error
 	waitChan := make(chan struct{})
+	timeout := time.NewTimer(30 * time.Second)
 	onCompleteCB := func(instance *foundation.AsyncOperationCompletedHandler, asyncInfo *foundation.IAsyncOperation, asyncStatus foundation.AsyncStatus) {
 		defer close(waitChan)
 		if asyncStatus != foundation.AsyncStatusCompleted {
@@ -67,16 +64,20 @@ func GetFileFromPath(fp string) (*StorageFile, error) {
 		return nil, err
 	}
 
-	// Wait until async operation has stopped, and finish.
-	<-waitChan
-	return storageFile, err
+	// Wait until async operation has stopped, or timeout
+	select {
+	case <-waitChan:
+		return storageFile, err
+	case <-timeout.C:
+		return nil, fmt.Errorf("timeout waiting for async operation to complete after 30 seconds")
+	}
 }
 
 func Test_GetStorageFileFromPath(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "someDir")
 	require.NoError(t, err)
 	fpath := filepath.Join(tempDir, "someFile.txt")
-	f, err := os.Create(fpath)
+	f, err := os.Create(fpath) // #nosec G304 - test file creation with controlled path
 	require.NoError(t, err)
 	require.NotNil(t, f)
 	sfile, err := GetFileFromPath(fpath)

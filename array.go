@@ -1,6 +1,7 @@
 package winrt
 
 import (
+	"math"
 	"reflect"
 	"sync"
 	"syscall"
@@ -63,6 +64,7 @@ type arrayIterable struct {
 	itemSignature string
 }
 
+// NewArrayIterable creates a new IIterable from a Go slice for passing to WinRT APIs.
 func NewArrayIterable(items []any, itemSignature string) *collections.IIterable {
 	// create type instance
 	size := unsafe.Sizeof(*(*arrayIterable)(nil))
@@ -139,7 +141,7 @@ func first(inst unsafe.Pointer, out **collections.IIterator) uintptr {
 	offset := unsafe.Offsetof(arrayIterable{}.IIterable)
 	i := (*arrayIterable)(unsafe.Pointer(uintptr(inst) - offset))
 
-	arrIt, ok := arrayItems.get(inst)
+	arrIt, ok := arrayItems.get(unsafe.Pointer(i))
 	if !ok {
 		return ole.E_FAIL
 	}
@@ -166,6 +168,7 @@ type collectionsIterator struct {
 	itemSignature string
 }
 
+// NewArrayIterator creates a new IIterator from a Go slice for passing to WinRT APIs.
 func NewArrayIterator(items []any, itemSignature string) *collections.IIterator {
 	// create type instance
 	size := unsafe.Sizeof(*(*collectionsIterator)(nil))
@@ -176,7 +179,7 @@ func NewArrayIterator(items []any, itemSignature string) *collections.IIterator 
 	callbacks := iunknown.RegisterInstance(instPtr, inst)
 
 	// the VTable should also be allocated in the heap
-	sizeVTable := unsafe.Sizeof(*(*collections.IIterableVtbl)(nil))
+	sizeVTable := unsafe.Sizeof(*(*collections.IIteratorVtbl)(nil))
 	vTablePtr := kernel32.Malloc(sizeVTable)
 
 	inst.RawVTable = (*interface{})(vTablePtr)
@@ -200,7 +203,7 @@ func NewArrayIterator(items []any, itemSignature string) *collections.IIterator 
 	inst.Mutex = sync.Mutex{}
 	inst.refs = 0
 	inst.itemSignature = itemSignature
-	inst.index = -1 // not initialized
+	inst.index = 0 // ensure index is in the open interval [0,len(items))
 
 	inst.AddRef()
 	return &inst.IIterator // ugly but works
@@ -299,7 +302,10 @@ func getMany(inst, itemsAmount, outItems, outItemsSize unsafe.Pointer) uintptr {
 
 	// requested itemsAmount
 	requestedItems := int(uintptr(itemsAmount))
-	availableItems := len(items) - it.index - 1
+	availableItems := len(items) - it.index
+	if availableItems < 0 {
+		availableItems = 0
+	}
 	returnItems := requestedItems
 	if returnItems > availableItems {
 		// not enough items available
@@ -309,18 +315,21 @@ func getMany(inst, itemsAmount, outItems, outItemsSize unsafe.Pointer) uintptr {
 	// copy items
 	n := uintptr(0)
 	for i := 0; i < returnItems; i++ {
-		it.index++
 		n += copyItemToPointer(items[it.index], unsafe.Pointer(uintptr(outItems)+n))
+		it.index++
 	}
 
 	// output size
+	if returnItems < 0 || returnItems > math.MaxUint32 {
+		return ole.E_FAIL
+	}
 	*(*uint32)(outItemsSize) = uint32(returnItems) /*the amount of items*/
 
 	return ole.S_OK
 }
 
 func copyItemToPointer(item any, out unsafe.Pointer) uintptr {
-	var size uintptr = 0
+	var size uintptr
 	switch t := item.(type) {
 	case uint:
 		*(*uint)(out) = t

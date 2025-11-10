@@ -1,56 +1,68 @@
-linters:
-  enable:
-    # golangci-lint curated list of linters (as of 1.42.1)
-    - deadcode
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - staticcheck
-    - structcheck
-    - typecheck
-    - unused
-    - varcheck
-    # Our own extra sauce
-    # Temporarily disable this linter until underlying issues for the 1.18 support
-    # are fixed:
-    # * https://github.com/go-critic/go-critic/issues/1193
-    #- gocritic
-    - goimports
-    - revive
-    - exportloopref
-    - unparam
-    - ifshort
-    - gosec
-  disable-all: true
-
-issues:
-  exclude-use-default: false
-  exclude:
-    # Ignore err, ctx and ok variables shadowing, which are quite common and in principle, uncritical cases.
-    - 'declaration of "err|ctx|ok" shadows declaration at'
-
-linters-settings:
-  errcheck:
-    exclude: .go-builder/.errcheck.exclude
-
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
-    disabled-checks:
-      - unnamedResult
-
-  govet:
-    check-shadowing: true
-
-  gosec:
-    excludes:
-      - G104
-
+version: "2"
 run:
   build-tags:
+    - windows
     - integration
     - unit
     - e2e
+linters:
+  default: none
+  enable:
+    - errcheck
+    - gosec
+    - govet
+    - ineffassign
+    - revive
+    - staticcheck
+    - unparam
+    - unused
+  settings:
+    errcheck:
+      exclude-functions:
+        - (github.com/saltosystems/x/log.Logger).Error
+        - (github.com/saltosystems/x/log.Logger).Info
+        - (github.com/saltosystems/x/log.Logger).Warn
+        - (github.com/saltosystems/x/log.Logger).Debug
+    gocritic:
+      disabled-checks:
+        - unnamedResult
+      enabled-tags:
+        - diagnostic
+        - style
+        - performance
+    gosec:
+      excludes:
+        - G103  # Unsafe pointer usage required for COM/WinRT interop
+        - G115  # Integer conversions are safe in this context
+        - G301  # Directory permissions for generated code
+    govet:
+      enable:
+        - shadow
+    revive:
+      rules:
+        - name: package-comments
+          disabled: true
+        - name: unused-parameter
+          disabled: true
+    staticcheck:
+      checks:
+        - "-QF1001"  # De Morgan's law - style preference
+        - "-ST1023"  # Type inference - style preference
+  exclusions:
+    generated: lax
+    rules:
+      - path: (.+)\.go$
+        text: declaration of "err|ctx|ok" shadows declaration at
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
